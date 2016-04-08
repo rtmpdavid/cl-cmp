@@ -2,5 +2,6 @@
 
 (defpackage #:cl-cmp
   (:use #:cl)
-  (:export #:define-pred))
+  (:export #:cmp
+   ))
 

@@ -5,13 +5,14 @@
 ;;; "cl-cmp" goes here. Hacks and glory await!
 
 (defparameter *preds* '(< <= = /= > >= ))
-(defparameter *ops2-1* '(* /-))
+(defparameter *ops2-1* '(* /))
 
 (defparameter *ops2-2* '(+ -
 			 max min
 			 expt
 			 gcd lcm
 			 mod rem
+			 log
 			 logand logandc1 logandc2 logeqv logior lognand lognor logorc1 logorc2 logxor))
 
 (defparameter *ops* nil)
@@ -64,9 +65,16 @@
     ((e1 op2-2 e1) (e1 (op2-2 e1 e1)))
     
     ((ps e2 pc) (e2 e2))
-    ((e2 op2 e2) (e2 (op2 e2 e2)))
+
+    ((e2 op2-1 e2) (e2 (op2-1 e2 e2)))
+    ((e2 op2-2 e2) (e2 (op2-2 e2 e2)))
+    
     ((e1) (e2 (e1)))
     ((e2) (e3 (e2)))
+
+    ((e3 op2-1 e3) (e3 (op2-1 e3 e3)))
+    ((e3 op2-2 e3) (e3 (op2-2 e3 e3)))
+    
     ((e3 cm2 e3 cm2) (e4 (cm2 e3 e3)) :apnd ((e3 ((2 e3))) (cm2 ((2 cm2)))))
     ((e3 cm2 e3) (e4 (cm2 e3 e3)))))
 
@@ -170,8 +178,9 @@
        while match
        ;; do (print expr)
        do (setf expr (rep-rule match expr))
-       ;; do (print expr)
        finally (return expr))))
 
 (defmacro cmp (&body body)
-  `',(pred-expand body))
+  (let ((expanded (pred-expand body)))
+    (if (= (length expanded) 1) (cadar expanded)
+	`(and ,@(mapcar #'cadr expanded)))))
